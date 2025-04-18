@@ -8,8 +8,10 @@ import os
 import time
 import numpy as np
 from std_msgs.msg import Int32MultiArray
-import cec_pose
 
+import cec_detect
+import cec_pose
+import cec_dsg
 
 class WebcamObjectSegmentor:
     def __init__(self):
