@@ -3,7 +3,7 @@
 import cec_dsg
 import cec_pose
 import cec_detect
-from segmentation import segment
+#from segmentation import segment
 import math, numpy, utils
 import cv2, pickle, os
 
