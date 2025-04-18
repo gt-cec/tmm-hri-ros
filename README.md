@@ -1,6 +1,6 @@
 # TMM-HRI ROS
 
-ROS demonstration of the (TMM-HRI)[https://github.com/gt-cec/tmm-hri] project.
+ROS demonstration of the [TMM-HRI](https://github.com/gt-cec/tmm-hri) project.
 
 The project infers a person's belief state from a third-person view (i.e., a robot). Importantly, the system supports:
 1. Partial Observability: the robot cannot see everything at once.
