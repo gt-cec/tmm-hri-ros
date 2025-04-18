@@ -1,6 +1,6 @@
 import rospy
 import torch
-from transformers import OwlViTProcessor, OwlViTForObjectDetection, SamProcessor, SamForImageSegmentation
+from transformers import OwlViTProcessor, OwlViTForObjectDetection, SamProcessor, SamModel
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import cv2
@@ -30,7 +30,7 @@ class WebcamObjectSegmentor:
 
         # Load SAMv2
         self.sam_processor = SamProcessor.from_pretrained("facebook/sam-vit-huge")
-        self.sam_model = SamForImageSegmentation.from_pretrained("facebook/sam-vit-huge").to(self.device)
+        self.sam_model = SamModel.from_pretrained("facebook/sam-vit-huge").to(self.device)
 
         self.last_saved_time = time.time()
 
