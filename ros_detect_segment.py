@@ -4,7 +4,6 @@ from transformers import OwlViTProcessor, OwlViTForObjectDetection, SamProcessor
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import cv2
-import os
 import time
 import numpy as np
 from std_msgs.msg import Int32MultiArray
@@ -39,28 +38,43 @@ class WebcamObjectSegmentor:
             # Convert ROS Image message to OpenCV format
             cv_image = self.bridge.imgmsg_to_cv2(data, desired_encoding='bgr8')
             rgb_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
-            agent_pose = (1, 0)   # placeholder
+            robot_pose = [np.array([0, 0]), np.array([1, 0])]   # placeholder
             classes = ["apple", "cup"]
+            class_to_class_id = {o : i for i, o in enumerate(classes)}
+            depth_classes = ["human", "person", "human standing", "person standing", "silhouette of a person", "silhouette of a human", "silhouette of a person from the side", "silhouette of a human from the side", "silhouette of a person"]  # not used for ground truth sim data
 
-            robot_detected_objects, robot_human_detections = self.robot_mm.update_from_rgbd_and_pose(rgb_image, depth_1channel, agent_pose, classes, class_to_class_id=class_to_class_id, depth_classes=depth_classes, detect_threshold=0.4, seg_save_name=f"{episode_dir}/{agent_id}/Action_{str(frame_id).zfill(4)}")
+            robot_detected_objects, robot_human_detections = self.robot_mm.update_from_rgbd_and_pose(rgb_image, depth_1channel, robot_pose, classes, class_to_class_id=class_to_class_id, depth_classes=depth_classes, detect_threshold=0.4, seg_save_name=f"./seg.png")
+
+            print("detected objects: ", robot_detected_objects)
+            print("detected humans: ", robot_human_detections)
 
             depth_map = np.zeros((cv_image.shape[0], cv_image.shape[1]))
-            robot_pose = [np.array([0, 0]), np.array([1, 0])]
-
-            detected_humans = []
-            for box, mask in zip(boxes, masks):
-                box_coords = [[box[0], box[1]], [box[2], box[3]]]
-                detected_humans.append({
-                "seg mask": mask,
-                "box": box_coords
-                })
 
             pred_person_loc, predicted_heading, other_data = self.pose_detector.get_heading_of_person(
                 rgb=cv_image,
                 depth_map=depth_map,
-                detected_humans=detected_humans,
+                detected_humans=robot_human_detections,
                 robot_pose=robot_pose
             )
+
+            # if the human is visible to the robot, run the trajectory prediction
+            objects_visible_to_human = []  # objects that the robot thinks the human can see
+            human_trajectory_debug = None
+            # update the human pose 
+            if len(robot_human_detections[0]) > 0:  # if a human was seen, use the first one (can place this in a loop to support multiple humans, but we only have one human mental model in play)
+                print("  Human was observed, so updating the predicted human mental model")
+                human_pose = robot_human_detections[0][0]["pose"]  # get the human's pose
+                human_location = [human_pose[0], human_pose[1], human_pose[2]] # pose[0] is the base joint, using [east, north, vertical]
+                robot_human_detections[0][0]["visible objects"] = objects_visible_to_human  # update the human's visible objects in the detections
+                
+                # if human has not been seen since before the last frame, predict where the human went since the last view
+                if last_saw_human[0] is not None:
+                    # if using ground truth human trajectory, get the poses
+                    gt_human_poses = []
+                    # get objects along the path that the human took
+                    objects_visible_to_human, human_trajectory_debug = prediction.predict.get_objects_visible_from_last_seen(last_saw_human[1][:2], human_location[:2], map_boundaries, robot_mm.dsg, human_fov=gt_human_mm.fov, end_direction=robot_human_detections[0][0]["direction"][:2], use_gt_human_trajectory=use_gt_human_trajectory, gt_human_poses=gt_human_poses, infer_human_trajectory=infer_human_trajectory, debug_tag=f"{frame_id}")
+                    self.pred_human_mm.update_from_detected_objects(objects_visible_to_human)  # update the predicted human's mental model
+                last_saw_human = (time.time(), human_location)
 
         except Exception as e:
             rospy.logerr(f"Error processing image: {e}")
