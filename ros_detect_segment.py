@@ -9,6 +9,7 @@ import numpy as np
 from std_msgs.msg import Int32MultiArray
 import cec_pose
 import mental_model
+import predict
 
 class WebcamObjectSegmentor:
     def __init__(self):
@@ -72,7 +73,7 @@ class WebcamObjectSegmentor:
                     # if using ground truth human trajectory, get the poses
                     gt_human_poses = []
                     # get objects along the path that the human took
-                    objects_visible_to_human, human_trajectory_debug = prediction.predict.get_objects_visible_from_last_seen(last_saw_human[1][:2], human_location[:2], np.ones((512, 512)), self.robot_mm.dsg, human_fov=120, end_direction=robot_human_detections[0][0]["direction"][:2], use_gt_human_trajectory=False, gt_human_poses=gt_human_poses, infer_human_trajectory=True, debug_tag=f"{int(time.time()) % 1000}")
+                    objects_visible_to_human, human_trajectory_debug = predict.get_objects_visible_from_last_seen(last_saw_human[1][:2], human_location[:2], np.ones((512, 512)), self.robot_mm.dsg, human_fov=120, end_direction=robot_human_detections[0][0]["direction"][:2], use_gt_human_trajectory=False, gt_human_poses=gt_human_poses, infer_human_trajectory=True, debug_tag=f"{int(time.time()) % 1000}")
                     self.pred_human_mm.update_from_detected_objects(objects_visible_to_human)  # update the predicted human's mental model
                 last_saw_human = (time.time(), human_location)
 
