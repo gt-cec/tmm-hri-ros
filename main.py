@@ -13,7 +13,7 @@ import matplotlib
 
 class PerceptionNode:
     latest_image = None
-    latest_depth = None
+    depth_by_timestamp = {}
     depth_timestamp = None
     image_timestamp = None
 
@@ -59,11 +59,19 @@ class PerceptionNode:
 
     def image_callback(self, data):
         self.rgb_timestamp = data.header.stamp
-        if self.depth_timestamp is not None and self.rgb_timestamp - self.depth_timestamp > rospy.Duration(1.0):
-            print("RGB image is too old, skipping, image timestamp: ", self.rgb_timestamp, " depth timestamp: ", self.depth_timestamp)
+
+        # get the closest depth image based on the timestamp
+        depth_key = None
+        for depth_timestamp in self.depth_by_timestamp:
+            if depth_timestamp > self.rgb_timestamp:
+                break
+            depth_key = depth_timestamp
+        if depth_key is None:
+            print("No depth image found for this RGB image, skipping...")
             return
+        
         rgb_image = self.bridge.imgmsg_to_cv2(data, desired_encoding='rgb8')
-        depth_image = self.latest_depth if self.latest_depth is not None else np.ones((rgb_image.shape[0], rgb_image.shape[1]))  # placeholder for depth image
+        depth_image = self.depth_by_timestamp[depth_key] if len(self.depth_by_timestamp) > 0 else np.ones((rgb_image.shape[0], rgb_image.shape[1]))  # placeholder for depth image
         # resize the depth image to match the RGB image
         depth_image = cv2.resize(depth_image, (rgb_image.shape[1], rgb_image.shape[0]))
         # rotate the RGB images by 90 degrees to match robot orientation
@@ -74,16 +82,17 @@ class PerceptionNode:
         # get the padding from the width
         width = rgb_image.shape[1]
         height = rgb_image.shape[0]
+        depth_pixel_adjust = -50  # used to adjust which pixel range is cropped, to more closely align the RGB and depth
         if width > height:
             diff = (width - height) // 2
             rgb_image = rgb_image[:, diff:diff + height, :]
-            depth_image = depth_image[:, diff:diff + height]
+            depth_image = depth_image[:, diff-depth_pixel_adjust:diff + height-depth_pixel_adjust]
         else:
             diff = (height - width) // 2
             rgb_image = rgb_image[diff:diff + width, :, :]
-            depth_image = depth_image[diff:diff + width]
+            depth_image = depth_image[diff-depth_pixel_adjust:diff-depth_pixel_adjust + width]
 
-        depth_image = depth_image / 100  # convert depth image to decimeters
+        depth_image = depth_image / 700  # convert depth image to decimeters
         print("depth info", np.min(depth_image), np.max(depth_image), np.mean(depth_image))
 
         robot_pose = [np.array([0, 0, 0]), np.array([1, 0, 0])]   # placeholder
@@ -126,7 +135,7 @@ class PerceptionNode:
         image = self.bridge.imgmsg_to_cv2(data, desired_encoding='passthrough')
         # get the message timestamp
         self.depth_timestamp = data.header.stamp
-        self.latest_depth = image
+        self.depth_by_timestamp[self.depth_timestamp] = image
         print("saved depth image with timestamp: ", self.depth_timestamp)
 
 if __name__ == '__main__':
