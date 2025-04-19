@@ -60,7 +60,9 @@ class PerceptionNode:
 
     def image_callback(self, data):
         if self.image_processing:
+            print("Already processing... returning early")
             return
+        print("Starting processing, blocking other image callbacks")
         self.image_processing = True
         self.rgb_timestamp = data.header.stamp
 
