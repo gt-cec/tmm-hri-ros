@@ -11,7 +11,8 @@ class PlotFullTMM():
         self.class_id_to_color_map = class_id_to_color_map
         self.use_gt_semantics = use_gt_semantics
 
-        self.fig = plt.figure()
+        self.fig = plt.figure(figsize=(12, 4))
+        # set figure dimensions in inches
         self.fig.tight_layout()
 
         # scatter plot for robot mm
