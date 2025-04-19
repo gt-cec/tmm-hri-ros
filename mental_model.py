@@ -83,7 +83,7 @@ class MentalModel:
                 # segment the objects
                 object_boxes = [o["box"] for o in detected_objects]
                 human_boxes = [o["box"] for o in detected_humans]
-                seg_masks = self.detect.segment.segment(rgb, object_boxes + human_boxes)
+                seg_masks = self.detect.segment(rgb, object_boxes + human_boxes)
                 object_seg_masks = seg_masks[:len(object_boxes)]
                 for i in range(object_seg_masks.shape[0]):
                     detected_objects[i]["seg mask"] = object_seg_masks[i,:,:]
