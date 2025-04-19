@@ -64,7 +64,7 @@ class PerceptionNode:
             return
         print("Starting processing, blocking other image callbacks")
         self.image_processing = True
-        self.rgb_timestamp = data.header.stamp
+        self.rgb_timestamp = int(time.time())
 
         # get the closest depth image based on the timestamp
         depth_key = None
@@ -142,7 +142,7 @@ class PerceptionNode:
     def depth_callback(self, data):
         image = self.bridge.imgmsg_to_cv2(data, desired_encoding='passthrough')
         # get the message timestamp
-        self.depth_timestamp = data.header.stamp
+        self.depth_timestamp = int(time.time())
         self.depth_by_timestamp[self.depth_timestamp] = image
         print("saved depth image with timestamp: ", self.depth_timestamp)
 
