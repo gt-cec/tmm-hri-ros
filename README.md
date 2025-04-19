@@ -12,4 +12,4 @@ The upstream project codebase used offline simulation recordings. This codebase 
 
 ## Usage
 
-Run `main.py` to start a ROS node that listens for RGB and Depth topics 
+Run `main.py` to start a ROS node that listens for RGB and Depth topics. T

@@ -53,8 +53,8 @@ class PerceptionNode:
         # visualization plot
         self.plot = plot_full_tmm.PlotFullTMM(self.classes, self.class_to_class_id, class_id_to_color_map, use_gt_semantics=False)  # initialize the plot
 
-        self.image_sub = rospy.Subscriber('/camera/color/image_raw', Image, self.image_callback)
-        self.image_sub = rospy.Subscriber('/camera/depth/image_rect_raw', Image, self.depth_callback)
+        self.image_sub = rospy.Subscriber('/camera/color/image_raw', Image, self.image_callback, queue_size=1)
+        self.image_sub = rospy.Subscriber('/camera/depth/image_rect_raw', Image, self.depth_callback, queue_size=1)
         print("Perception node initialized, waiting for images...")
 
     def image_callback(self, data):
