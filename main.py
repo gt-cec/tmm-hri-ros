@@ -53,11 +53,15 @@ class PerceptionNode:
         # visualization plot
         self.plot = plot_full_tmm.PlotFullTMM(self.classes, self.class_to_class_id, class_id_to_color_map, use_gt_semantics=False)  # initialize the plot
 
+        self.image_processing = False  # flag for blocking
         self.image_sub = rospy.Subscriber('/camera/color/image_raw', Image, self.image_callback, queue_size=1)
         self.image_sub = rospy.Subscriber('/camera/depth/image_rect_raw', Image, self.depth_callback, queue_size=1)
         print("Perception node initialized, waiting for images...")
 
     def image_callback(self, data):
+        if self.image_processing:
+            return
+        self.image_processing = True
         self.rgb_timestamp = data.header.stamp
 
         # get the closest depth image based on the timestamp
@@ -129,6 +133,8 @@ class PerceptionNode:
         print("  Predicted human mental model: ", self.pred_human_mm.dsg.get_objects_by_id())
         self.plot.update(robot_mm=self.robot_mm, pred_human_mm=self.pred_human_mm, gt_human_mm=None, agent_pose=robot_pose, detected_objects=robot_detected_objects, human_detections=robot_human_detections, objects_visible_to_human=objects_visible_to_human, rgb_image=rgb_image, depth_image=depth_image, frame_num=int(time.time()) % 1000)
         self.plot.save(int(time.time()) % 10000)  # save the plot, tag it with the current time
+
+        self.image_processing = False
 
     # save the depth image
     def depth_callback(self, data):
