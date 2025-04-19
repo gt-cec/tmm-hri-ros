@@ -11,7 +11,7 @@ class MentalModel:
         self.dsg = cec_dsg.DSG()
         self.fov = 40
         self.pose_detector = cec_pose.PoseDetector() if pose_detector is None else pose_detector
-        self.detect = cec_detect.Detect()  # initialize the object detector
+        self.detect = cec_detect.Detector()  # initialize the object detector
 
     # initializes the DSG from a list of objects
     def initialize(self, objects:list, verbose=False) -> None:
@@ -62,17 +62,17 @@ class MentalModel:
                 depth_detected_humans = None
             else:
                 # get objects in the scene
-                detected_objects, _ = self.detect.detect(rgb, classes, detect_threshold)  # returns detected objects and an RGB debugging image (ignored)
+                detected_objects = self.detect.detect(rgb, classes, detect_threshold)  # returns detected objects and an RGB debugging image (ignored)
 
                 # get humans in the scene
-                rgb_detected_humans, _ = self.detect.detect(rgb, depth_classes, 0.1)
+                rgb_detected_humans = self.detect.detect(rgb, depth_classes, 0.1)
                 for human in rgb_detected_humans:
                     human["class"] = "human"
                     human["class id"] = human_class_id
 
                 # get humans figures using depth, this is used to double check the humans
                 depth_3channel = numpy.tile(numpy.expand_dims(depth, axis=0), (3, 1, 1))  # Shape becomes (3, 2, 2)
-                depth_detected_humans, depth_with_boxes = self.detect.detect(depth_3channel * 20, depth_classes, 0.4)  # multiplying depth by *20 makes it a more contrastive image
+                depth_detected_humans = self.detect.detect(depth_3channel * 20, depth_classes, 0.4)  # multiplying depth by *20 makes it a more contrastive image
                 for human in depth_detected_humans:  # set all outputs to human
                     human["class"] = "human"
                     human["class id"] = human_class_id
