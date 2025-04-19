@@ -11,10 +11,13 @@ import mental_model
 import predict
 
 class PerceptionNode:
+    latest_image = None
+    latest_depth = None
+
     def __init__(self):
         rospy.init_node('perception', anonymous=True)
         self.image_sub = rospy.Subscriber('rgb_image', Image, self.image_callback)
-        self.image_sub = rospy.Subscriber('depth_image', Image, self.image_callback)
+        self.image_sub = rospy.Subscriber('depth_image', Image, self.depth_callback)
 
         self.bridge = CvBridge()
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -37,7 +40,7 @@ class PerceptionNode:
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, desired_encoding='bgr8')
             rgb_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
-            depth_image = np.ones((cv_image.shape[0], cv_image.shape[1]))  # placeholder for depth image
+            depth_image = self.latest_depth if self.latest_depth is not None else np.ones((cv_image.shape[0], cv_image.shape[1]))  # placeholder for depth image
 
             robot_pose = [np.array([0, 0]), np.array([1, 0])]   # placeholder
             classes = ["apple", "cup"]  # placeholder
@@ -77,6 +80,10 @@ class PerceptionNode:
 
         except Exception as e:
             rospy.logerr(f"Error processing image: {e}")
+
+    def depth_callback(self, data):
+        image = self.bridge.imgmsg_to_cv2(data, desired_encoding='passthrough')
+        self.latest_depth = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
 if __name__ == '__main__':
     try:
