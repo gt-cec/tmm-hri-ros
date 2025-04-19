@@ -101,6 +101,7 @@ class PerceptionNode:
         # visual or something here
         print("  Predicted human mental model: ", self.pred_human_mm.dsg.get_objects_by_id())
         self.plot.update(robot_mm=self.robot_mm, pred_human_mm=self.pred_human_mm, gt_human_mm=None, agent_pose=robot_pose, detected_objects=robot_detected_objects, human_detections=robot_human_detections, objects_visible_to_human=objects_visible_to_human, rgb_image=rgb_image, depth_image=depth_image, frame_num=int(time.time()) % 1000)
+        self.plot.save()
 
     def depth_callback(self, data):
         image = self.bridge.imgmsg_to_cv2(data, desired_encoding='passthrough')

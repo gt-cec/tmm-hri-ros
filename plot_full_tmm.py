@@ -162,7 +162,11 @@ class PlotFullTMM():
             self.ax_scatter_human.add_patch(circle)
 
         # update the depth image
-        self.plot_depth.set_data(depth_image[::-1,:,:] / 5)
+        if len(depth_image.shape) == 3:
+            self.plot_depth.set_data(depth_image[::-1,:,:] / 5)
+        else:
+            self.plot_depth.set_data(depth_image[::-1,:] / 5)
+        
         if not self.use_gt_semantics:  # ground truth semantics don't segment depth, so don't bother plotting it
             for patch in self.ax_depth.patches + self.ax_depth.texts:  # remove existing rectangles
                 patch.remove()
@@ -173,3 +177,6 @@ class PlotFullTMM():
         # update the seg image
         self.plot_seg.set_data(seg[::-1,:,:])
         self.text_frame.set_text(f"Frame: {frame_num}")
+
+    def save(tag=0):
+        plt.savefig(f"visualization_{tag}.png", dpi=300)
