@@ -9,14 +9,49 @@ from std_msgs.msg import Int32MultiArray
 import cec_pose
 import mental_model
 import predict
+import pyrealsense2 as rs
+
 
 class PerceptionNode:
     def __init__(self):
         rospy.init_node('perception', anonymous=True)
-        self.image_sub = rospy.Subscriber('rgb_image', Image, self.image_callback)
-        self.image_sub = rospy.Subscriber('depth_image', Image, self.image_callback)
+
+        color_pub = rospy.Publisher("/camera/color/image_raw", Image, queue_size=10)
+        depth_pub = rospy.Publisher("/camera/depth/image_rect_raw", Image, queue_size=10)
 
         self.bridge = CvBridge()
+
+        # Configure RealSense pipeline
+        pipeline = rs.pipeline()
+        config = rs.config()
+        config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
+        config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
+
+        pipeline.start(config)
+
+        try:
+            frames = pipeline.wait_for_frames()
+            depth_frame = frames.get_depth_frame()
+            color_frame = frames.get_color_frame()
+
+            # Convert to numpy arrays
+            depth_image = np.asanyarray(depth_frame.get_data())
+            color_image = np.asanyarray(color_frame.get_data())
+
+            # Convert to ROS images
+            color_msg = self.bridge.cv2_to_imgmsg(color_image, encoding="bgr8")
+            depth_msg = self.bridge.cv2_to_imgmsg(depth_image, encoding="16UC1")
+
+            # Publish images
+            color_pub.publish(color_msg)
+            depth_pub.publish(depth_msg)
+
+        finally:
+            pipeline.stop()
+
+        self.image_sub = rospy.Subscriber("/camera/color/image_raw", Image, self.image_callback)
+        self.image_sub = rospy.Subscriber("/camera/depth/image_rect_raw", Image, self.image_callback)
+
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         pose_detector = cec_pose.PoseDetector()  # share this across mental models, it has no state so no data leakage
