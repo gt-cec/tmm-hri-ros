@@ -1,0 +1,1 @@
+rosbag play stretch.bag --wait-for-subscribers

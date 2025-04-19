@@ -5,7 +5,6 @@ from cv_bridge import CvBridge
 import cv2
 import time
 import numpy as np
-from std_msgs.msg import Int32MultiArray
 import cec_pose
 import mental_model
 import predict
@@ -15,6 +14,8 @@ import matplotlib
 class PerceptionNode:
     latest_image = None
     latest_depth = None
+    depth_timestamp = None
+    image_timestamp = None
 
     def __init__(self):
         rospy.init_node('perception', anonymous=True)
@@ -54,9 +55,14 @@ class PerceptionNode:
 
         self.image_sub = rospy.Subscriber('/camera/color/image_raw', Image, self.image_callback)
         self.image_sub = rospy.Subscriber('/camera/depth/image_rect_raw', Image, self.depth_callback)
+        print("Perception node initialized, waiting for images...")
 
     def image_callback(self, data):
-        rgb_image = self.bridge.imgmsg_to_cv2(data, desired_encoding='bgr8')
+        self.rgb_timestamp = data.header.stamp
+        if self.depth_timestamp is not None and self.rgb_timestamp - self.depth_timestamp > rospy.Duration(1.0):
+            print("RGB image is too old, skipping, image timestamp: ", self.rgb_timestamp, " depth timestamp: ", self.depth_timestamp)
+            return
+        rgb_image = self.bridge.imgmsg_to_cv2(data, desired_encoding='rgb8')
         depth_image = self.latest_depth if self.latest_depth is not None else np.ones((rgb_image.shape[0], rgb_image.shape[1]))  # placeholder for depth image
         # resize the depth image to match the RGB image
         depth_image = cv2.resize(depth_image, (rgb_image.shape[1], rgb_image.shape[0]))
@@ -64,9 +70,21 @@ class PerceptionNode:
         rgb_image = cv2.rotate(rgb_image, cv2.ROTATE_90_CLOCKWISE)
         depth_image = cv2.rotate(depth_image, cv2.ROTATE_90_CLOCKWISE)
 
-        # save the rgb image to a file
-        cv2.imwrite(f"rgb_image_{int(time.time())}.png", rgb_image)
-        cv2.imwrite(f"depth_image_{int(time.time())}.png", depth_image)
+        # crop the images to the center
+        # get the padding from the width
+        width = rgb_image.shape[1]
+        height = rgb_image.shape[0]
+        if width > height:
+            diff = (width - height) // 2
+            rgb_image = rgb_image[:, diff:diff + height, :]
+            depth_image = depth_image[:, diff:diff + height]
+        else:
+            diff = (height - width) // 2
+            rgb_image = rgb_image[diff:diff + width, :, :]
+            depth_image = depth_image[diff:diff + width]
+
+        depth_image = depth_image / 100  # convert depth image to decimeters
+        print("depth info", np.min(depth_image), np.max(depth_image), np.mean(depth_image))
 
         robot_pose = [np.array([0, 0, 0]), np.array([1, 0, 0])]   # placeholder
         
@@ -101,10 +119,15 @@ class PerceptionNode:
         # visual or something here
         print("  Predicted human mental model: ", self.pred_human_mm.dsg.get_objects_by_id())
         self.plot.update(robot_mm=self.robot_mm, pred_human_mm=self.pred_human_mm, gt_human_mm=None, agent_pose=robot_pose, detected_objects=robot_detected_objects, human_detections=robot_human_detections, objects_visible_to_human=objects_visible_to_human, rgb_image=rgb_image, depth_image=depth_image, frame_num=int(time.time()) % 1000)
+        self.plot.save(int(time.time()) % 10000)  # save the plot, tag it with the current time
 
+    # save the depth image
     def depth_callback(self, data):
         image = self.bridge.imgmsg_to_cv2(data, desired_encoding='passthrough')
-        self.latest_depth = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # get the message timestamp
+        self.depth_timestamp = data.header.stamp
+        self.latest_depth = image
+        print("saved depth image with timestamp: ", self.depth_timestamp)
 
 if __name__ == '__main__':
     try:

@@ -1,0 +1,6 @@
+*.png
+*.bag
+*.bag.zip
+*.pkl
+*.pyc
+.DS_Store
