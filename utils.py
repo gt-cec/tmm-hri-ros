@@ -40,6 +40,7 @@ def project_detected_objects_positions_given_seg_masks_and_agent_pose(detected_o
     # get the location of the object in 3D space
     for i in range(len(detected_objects)):  # for each observed object
         obj = detected_objects[i]
+        print("OBJECT", obj)
         mask = depth[obj["seg mask"] > 0]  # the depth field corresponding to the object mask
         dist = mask.sum() / obj["seg mask"].sum()  # mean depth
         indices = obj["seg mask"].nonzero()  # get indices of the mask

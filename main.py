@@ -75,7 +75,7 @@ class PerceptionNode:
             self.previous_human_location = (time.time(), human_location)
 
         # visual or something here
-        print("  Predicted human mental model: ", self.pred_human_mm.dsg.get_all_objects())
+        print("  Predicted human mental model: ", self.pred_human_mm.dsg.get_objects_by_id())
 
     def depth_callback(self, data):
         image = self.bridge.imgmsg_to_cv2(data, desired_encoding='passthrough')
