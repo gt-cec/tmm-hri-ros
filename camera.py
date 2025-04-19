@@ -10,8 +10,8 @@ from cv_bridge import CvBridge
 def main():
     rospy.init_node('realsense_camera_node', anonymous=True)
 
-    color_pub = rospy.Publisher("/camera/color/image_raw", Image, queue_size=10)
-    depth_pub = rospy.Publisher("/camera/depth/image_rect_raw", Image, queue_size=10)
+    color_pub = rospy.Publisher("/camera/color/image_raw", Image, queue_size=1)
+    depth_pub = rospy.Publisher("/camera/depth/image_rect_raw", Image, queue_size=1)
 
     bridge = CvBridge()
 
