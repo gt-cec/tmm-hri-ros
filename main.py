@@ -46,7 +46,7 @@ class PerceptionNode:
         class_to_class_id = {o : i for i, o in enumerate(classes)}
         depth_classes = ["human", "person", "human standing", "person standing", "silhouette of a person", "silhouette of a human", "silhouette of a person from the side", "silhouette of a human from the side", "silhouette of a person"]  # not used for ground truth sim data
 
-        robot_detected_objects, robot_human_detections = self.robot_mm.update_from_rgbd_and_pose(rgb_image, depth_image, robot_pose, classes, class_to_class_id=class_to_class_id, depth_classes=depth_classes, detect_threshold=0.4, seg_save_name=f"./seg.png")
+        robot_detected_objects, robot_human_detections = self.robot_mm.update_from_rgbd_and_pose(rgb_image, depth_image, robot_pose, classes, class_to_class_id=class_to_class_id, depth_classes=depth_classes, detect_threshold=0.4, seg_save_name=None)
 
         print("detected objects: ", robot_detected_objects)
         print("detected humans: ", robot_human_detections)
