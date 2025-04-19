@@ -9,3 +9,4 @@ The project infers a person's belief state from a third-person view (i.e., a rob
 4. Zero-Shot: all models are zero-shot to new environments.
 
 The upstream project codebase used offline simulation recordings. This codebase integrates with ROS for a real-time live demonstration.
+
