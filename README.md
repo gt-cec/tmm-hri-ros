@@ -12,4 +12,6 @@ The upstream project codebase used offline simulation recordings. This codebase 
 
 ## Usage
 
-Run `main.py` to start a ROS node that listens for RGB and Depth topics and maintains two belief states (robot and inferred human). Upon recei
+Run `main.py` to start a ROS node that listens for RGB and Depth topics and maintains two belief states (robot and inferred human).
+
+If you are using a RealSense camera and have the RealSense library installed, run `camera.py` to set up a relay to the ROS nodes used by the belief state maintainer
