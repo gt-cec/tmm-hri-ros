@@ -11,7 +11,7 @@ class MentalModel:
         self.dsg = cec_dsg.DSG()
         self.fov = 40
         self.pose_detector = cec_pose.PoseDetector() if pose_detector is None else pose_detector
-        self.detect = cec_detect.Detect()  # initialize the object detector
+        self.detect = cec_detect.Detector()  # initialize the object detector
 
     # initializes the DSG from a list of objects
     def initialize(self, objects:list, verbose=False) -> None:
