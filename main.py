@@ -74,6 +74,7 @@ class PerceptionNode:
             depth_key = depth_timestamp
         if depth_key is None:
             print("No depth image found for this RGB image, skipping...")
+            self.image_processing = False
             return
         
         rgb_image = self.bridge.imgmsg_to_cv2(data, desired_encoding='rgb8')

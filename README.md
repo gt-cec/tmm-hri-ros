@@ -18,4 +18,6 @@ If you are using a RealSense camera and have the RealSense library installed, ru
 
 If you are using a Stretch RE2 robot, or a rosbag from that robot, it will use those topics.
 
-`main.py` will 
+`main.py` will processes images as it can (will take a few seconds per run on most laptops) and save a visualization of the belief states as png files `visualization_(time)`. `(time)` is derived from the current `time.time()`.
+
+We trialed this system using a 
