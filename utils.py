@@ -40,7 +40,6 @@ def project_detected_objects_positions_given_seg_masks_and_agent_pose(detected_o
     # get the location of the object in 3D space
     for i in range(len(detected_objects)):  # for each observed object
         obj = detected_objects[i]
-        print("OBJECT", obj)
         mask = depth[obj["seg mask"] > 0]  # the depth field corresponding to the object mask
         dist = mask.sum() / obj["seg mask"].sum()  # mean depth
         indices = obj["seg mask"].nonzero()  # get indices of the mask
@@ -52,6 +51,7 @@ def project_detected_objects_positions_given_seg_masks_and_agent_pose(detected_o
         y_pos_local = math.cos(horz_angle) * dist
         z_pos_local = math.sin(vert_angle) * dist
         direction = agent_pose[1] / np.linalg.norm(agent_pose[1])  # forward vector
+        print("OBJECT", depth.shape, obj["seg mask"].shape, direction)
         pose_horz_angle = math.atan2(direction[1], direction[0])  # for the pose, z is horz plan up (y), x is horz plan right (x)
         pose_vert_angle = math.asin(direction[2])  # for the pose, y is the vert plan up, so angle is y / 1
         x_pos_global = agent_pose[0][0] + math.cos(pose_horz_angle - horz_angle) * dist
